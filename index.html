@@ -96,13 +96,13 @@
   @keyframes crack{ 0%{ transform:scale(1); } 45%{ transform:scale(1.35); box-shadow: inset 0 -3px 6px rgba(0,0,0,.25), 0 0 0 6px rgba(161,61,61,.25); } 100%{ transform:scale(1); } }
   .sheet{ position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; animation: sheetIn .32s cubic-bezier(.22,.8,.36,1) both; }
   .wax.crack{ animation: crack .22s ease; }
-  .sheet-inner{ flex:1; display:flex; flex-direction:column; max-width:480px; margin:0 auto; width:100%; padding:20px; padding-top:calc(20px + env(safe-area-inset-top)); padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+  .sheet-inner{ flex:1; min-height:0; display:flex; flex-direction:column; max-width:480px; margin:0 auto; width:100%; padding:20px; padding-top:calc(20px + env(safe-area-inset-top)); padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
   .sheet-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .sheet-top .title{ font-family:'Cormorant Garamond',serif; color:#f2e9dc; font-size:20px; }
   .icon-btn{ background:transparent; box-shadow:none; color:#e7dccb; font-size:22px; padding:4px 10px; }
-  .paper-box{ background:var(--paper); border-radius:16px; padding:22px 20px; flex:1; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.35); animation: paperIn .4s .06s cubic-bezier(.22,.8,.36,1) both; }
-  .paper-box textarea{ flex:1; resize:none; border:none; background:transparent; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; padding:0; }
-  .letter-body{ flex:1; overflow-y:auto; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
+  .paper-box{ background:var(--paper); border-radius:16px; padding:22px 20px; flex:1; min-height:0; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.35); animation: paperIn .4s .06s cubic-bezier(.22,.8,.36,1) both; }
+  .paper-box textarea{ flex:1; min-height:0; resize:none; border:none; background:transparent; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; padding:0; }
+  .letter-body{ flex:1; min-height:0; overflow-y:auto; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
   .letter-head{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; font-family:'Manrope',sans-serif; display:flex; justify-content:space-between; }
   .send-row{ display:flex; gap:10px; margin-top:14px; }
   .send-row button{ flex:1; }
