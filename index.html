@@ -84,17 +84,23 @@
   .envelope .from{ font-weight:700; font-size:14px; color:var(--ink); }
   .envelope .preview{ font-size:13px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .envelope .time{ font-size:11px; color:var(--ink-soft); flex:none; }
+  .envelope .status{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .envelope .status.read{ color:var(--accent); font-weight:600; }
   .empty-hint{ color:#c9bba9; text-align:center; margin-top:60px; font-size:14px; line-height:1.6; }
 
   .fab{ position:fixed; left:20px; right:20px; bottom:calc(20px + env(safe-area-inset-bottom)); max-width:440px; margin:0 auto; }
 
   /* ---- Compose / Read views ---- */
-  .sheet{ position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; }
+  @keyframes sheetIn{ from{ opacity:0; transform:translateY(4%); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes paperIn{ from{ opacity:0; transform:translateY(18px) scale(.97); } to{ opacity:1; transform:translateY(0) scale(1); } }
+  @keyframes crack{ 0%{ transform:scale(1); } 45%{ transform:scale(1.35); box-shadow: inset 0 -3px 6px rgba(0,0,0,.25), 0 0 0 6px rgba(161,61,61,.25); } 100%{ transform:scale(1); } }
+  .sheet{ position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; animation: sheetIn .32s cubic-bezier(.22,.8,.36,1) both; }
+  .wax.crack{ animation: crack .22s ease; }
   .sheet-inner{ flex:1; display:flex; flex-direction:column; max-width:480px; margin:0 auto; width:100%; padding:20px; padding-top:calc(20px + env(safe-area-inset-top)); padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
   .sheet-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .sheet-top .title{ font-family:'Cormorant Garamond',serif; color:#f2e9dc; font-size:20px; }
   .icon-btn{ background:transparent; box-shadow:none; color:#e7dccb; font-size:22px; padding:4px 10px; }
-  .paper-box{ background:var(--paper); border-radius:16px; padding:22px 20px; flex:1; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .paper-box{ background:var(--paper); border-radius:16px; padding:22px 20px; flex:1; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.35); animation: paperIn .4s .06s cubic-bezier(.22,.8,.36,1) both; }
   .paper-box textarea{ flex:1; resize:none; border:none; background:transparent; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; padding:0; }
   .letter-body{ flex:1; overflow-y:auto; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
   .letter-head{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; font-family:'Manrope',sans-serif; display:flex; justify-content:space-between; }
@@ -152,7 +158,7 @@
       <div style="width:36px"></div>
     </div>
     <div class="paper-box">
-      <textarea id="composeText" placeholder="Начни с «Здравствуй...» и пиши, что на душе…" autofocus></textarea>
+      <textarea id="composeText" placeholder="Пиши здесь..." autofocus></textarea>
     </div>
     <div class="send-row">
       <button id="sendBtn">Запечатать и отправить</button>
@@ -320,6 +326,11 @@ function renderList(items){
     const readByMe = (item.readBy || []).includes(myAlias);
     const unread = !mine && !readByMe;
 
+    const readByOther = (item.readBy||[]).filter(a => a !== item.author);
+    const statusHtml = mine
+      ? `<div class="status${readByOther.length ? ' read' : ''}">${readByOther.length ? '\u2713\u2713 прочитано' : '\u2713 доставлено'}</div>`
+      : '';
+
     const div = document.createElement('div');
     div.className = 'envelope' + (mine ? ' mine' : '') + (unread ? ' unread' : '');
     div.innerHTML = `
@@ -328,9 +339,16 @@ function renderList(items){
         <div class="from">${mine ? 'Ты' : escapeHtml(item.author)}</div>
         <div class="preview">${unread ? 'Новое письмо ждёт тебя…' : escapeHtml((item.text||'').slice(0,40))}</div>
       </div>
-      <div class="time">${formatTime(item.createdAt)}</div>
+      <div>
+        <div class="time">${formatTime(item.createdAt)}</div>
+        ${statusHtml}
+      </div>
     `;
-    div.addEventListener('click', () => openLetter(item, mine));
+    div.addEventListener('click', () => {
+      const wax = div.querySelector('.wax');
+      wax.classList.add('crack');
+      setTimeout(() => openLetter(item, mine), 170);
+    });
     list.appendChild(div);
   });
   list.scrollTop = prevScroll;
