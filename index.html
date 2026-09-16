@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Письма</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f7f1e6;
+    --paper-dark:#efe6d4;
+    --ink:#3a2f28;
+    --ink-soft:#6b5c4f;
+    --accent:#a13d3d;
+    --accent-soft:#c98b6b;
+    --gold:#b08d57;
+    --bg:#211a17;
+    --bg2:#2c221d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; min-height:100vh;
+    background: radial-gradient(1200px 800px at 50% -10%, var(--bg2), var(--bg));
+    color:var(--ink);
+    font-family:'Manrope', sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+  }
+  .screen{ width:100%; max-width:480px; min-height:100vh; padding:24px 20px 32px; display:flex; flex-direction:column; }
+  [hidden]{ display:none !important; }
+
+  /* ---- Gate & name setup ---- */
+  .center-screen{ justify-content:center; align-items:center; text-align:center; gap:18px; }
+  .seal{
+    width:64px;height:64px;border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--accent-soft), var(--accent) 70%);
+    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 -4px 8px rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Cormorant Garamond', serif; font-size:28px; color:#f5e6d8; font-weight:600;
+  }
+  h1{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:28px; color:#f2e9dc; margin:4px 0; }
+  p.sub{ color:#c9bba9; font-size:14px; line-height:1.5; margin:0 0 6px; }
+  input[type=password], input[type=text], textarea{
+    width:100%; font-family:'Manrope',sans-serif; font-size:16px;
+    background: var(--paper); color:var(--ink); border:1px solid rgba(0,0,0,.08);
+    border-radius:12px; padding:14px 16px; outline:none;
+  }
+  input:focus, textarea:focus{ box-shadow:0 0 0 3px rgba(176,141,87,.35); }
+  button{
+    font-family:'Manrope',sans-serif; font-weight:600; font-size:15px;
+    border:none; border-radius:12px; padding:14px 18px; cursor:pointer;
+    background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+    color:#fff5ec; box-shadow:0 6px 16px rgba(161,61,61,.35);
+  }
+  button:active{ transform: translateY(1px); }
+  button.ghost{ background:transparent; box-shadow:none; color:#d8c9b6; border:1px solid rgba(216,201,182,.35); }
+  .field{ display:flex; flex-direction:column; gap:10px; width:100%; }
+  .error{ color:#ff9d9d; font-size:13px; min-height:16px; }
+
+  /* ---- App shell ---- */
+  #app{ padding-top:8px; }
+  .app-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .app-header h1{ font-size:24px; margin:0; }
+  .who{ font-size:12px; color:#c9bba9; }
+  .list{ flex:1; display:flex; flex-direction:column; gap:12px; overflow-y:auto; padding-bottom:90px; }
+  .envelope{
+    background: var(--paper); border-radius:14px; padding:16px 16px;
+    display:flex; align-items:center; gap:12px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,.25);
+    position:relative; border:1px solid rgba(0,0,0,.06);
+  }
+  .envelope.mine{ background: var(--paper-dark); }
+  .envelope .wax{
+    width:34px;height:34px;border-radius:50%; flex:none;
+    background: radial-gradient(circle at 35% 30%, var(--accent-soft), var(--accent) 70%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,.25);
+  }
+  .envelope.unread .wax{ box-shadow: inset 0 -3px 6px rgba(0,0,0,.25), 0 0 0 4px rgba(161,61,61,.18); }
+  .envelope .meta{ flex:1; min-width:0; }
+  .envelope .from{ font-weight:700; font-size:14px; color:var(--ink); }
+  .envelope .preview{ font-size:13px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .envelope .time{ font-size:11px; color:var(--ink-soft); flex:none; }
+  .empty-hint{ color:#c9bba9; text-align:center; margin-top:60px; font-size:14px; line-height:1.6; }
+
+  .fab{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + env(safe-area-inset-bottom)); width:calc(100% - 40px); max-width:440px; }
+
+  /* ---- Compose / Read views ---- */
+  .sheet{ position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; }
+  .sheet-inner{ flex:1; display:flex; flex-direction:column; max-width:480px; margin:0 auto; width:100%; padding:20px; padding-top:calc(20px + env(safe-area-inset-top)); padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+  .sheet-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .sheet-top .title{ font-family:'Cormorant Garamond',serif; color:#f2e9dc; font-size:20px; }
+  .icon-btn{ background:transparent; box-shadow:none; color:#e7dccb; font-size:22px; padding:4px 10px; }
+  .paper-box{ background:var(--paper); border-radius:16px; padding:22px 20px; flex:1; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .paper-box textarea{ flex:1; resize:none; border:none; background:transparent; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; padding:0; }
+  .letter-body{ flex:1; overflow-y:auto; font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
+  .letter-head{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; font-family:'Manrope',sans-serif; display:flex; justify-content:space-between; }
+  .send-row{ display:flex; gap:10px; margin-top:14px; }
+  .send-row button{ flex:1; }
+  .read-mark{ font-size:12px; color:var(--gold); margin-top:10px; text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- Экран пароля -->
+<div id="gate" class="screen center-screen">
+  <div class="seal">✉</div>
+  <h1>Здесь только для двоих</h1>
+  <p class="sub">Введи код доступа, чтобы открыть переписку</p>
+  <div class="field">
+    <input id="passInput" type="password" placeholder="Код доступа" autocomplete="off">
+    <button id="passBtn">Войти</button>
+    <div class="error" id="passError"></div>
+  </div>
+</div>
+
+<!-- Экран знакомства (имя) -->
+<div id="nameSetup" class="screen center-screen" hidden>
+  <div class="seal">✎</div>
+  <h1>Как тебя подписывать?</h1>
+  <p class="sub">Это имя увидит собеседник под каждым твоим письмом</p>
+  <div class="field">
+    <input id="nameInput" type="text" placeholder="Имя или псевдоним" autocomplete="off" maxlength="30">
+    <button id="nameBtn">Продолжить</button>
+  </div>
+</div>
+
+<!-- Главный экран -->
+<div id="app" class="screen" hidden>
+  <div class="app-header">
+    <div>
+      <h1>Письма</h1>
+      <div class="who" id="whoLine"></div>
+    </div>
+    <button class="icon-btn" id="menuBtn" title="Сменить имя">⚙</button>
+  </div>
+  <div class="list" id="list">
+    <div class="empty-hint">Пока писем нет.<br>Напиши первое — стань тем, кто начал.</div>
+  </div>
+  <button class="fab" id="composeBtn">✎ Написать письмо</button>
+</div>
+
+<!-- Экран написания письма -->
+<div class="sheet" id="composeView" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-top">
+      <button class="icon-btn" id="composeClose">✕</button>
+      <div class="title">Новое письмо</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="paper-box">
+      <textarea id="composeText" placeholder="Начни с «Здравствуй...» и пиши, что на душе…" autofocus></textarea>
+    </div>
+    <div class="send-row">
+      <button id="sendBtn">Запечатать и отправить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Экран чтения письма -->
+<div class="sheet" id="readView" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-top">
+      <button class="icon-btn" id="readClose">✕</button>
+      <div class="title">Письмо</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="paper-box">
+      <div class="letter-head">
+        <span id="readFrom"></span>
+        <span id="readTime"></span>
+      </div>
+      <div class="letter-body" id="readBody"></div>
+      <div class="read-mark" id="readMark"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+  serverTimestamp, doc, updateDoc, arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+/* ============ НАСТРОЙКИ — заполни перед запуском ============ */
+const PASSCODE = "измени-меня"; // придумайте свой код доступа (любые символы)
+
+const firebaseConfig = {
+  apiKey: "ВСТАВЬ_СЮДА",
+  authDomain: "ВСТАВЬ_СЮДА",
+  projectId: "ВСТАВЬ_СЮДА",
+  storageBucket: "ВСТАВЬ_СЮДА",
+  messagingSenderId: "ВСТАВЬ_СЮДА",
+  appId: "ВСТАВЬ_СЮДА"
+};
+/* =============================================================== */
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const lettersCol = collection(db, "letters");
+
+const $ = (id) => document.getElementById(id);
+const show = (el) => el.removeAttribute('hidden');
+const hide = (el) => el.setAttribute('hidden', '');
+
+/* ---------- Пароль ---------- */
+const gate = $('gate');
+if (localStorage.getItem('gate_ok') === '1') {
+  hide(gate);
+} else {
+  $('passBtn').addEventListener('click', tryPass);
+  $('passInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryPass(); });
+}
+function tryPass(){
+  const val = $('passInput').value.trim();
+  if (val === PASSCODE) {
+    localStorage.setItem('gate_ok', '1');
+    hide(gate);
+    afterGate();
+  } else {
+    $('passError').textContent = 'Неверный код, попробуй ещё раз';
+  }
+}
+
+/* ---------- Имя ---------- */
+function afterGate(){
+  const alias = localStorage.getItem('myAlias');
+  if (alias) {
+    startApp(alias);
+  } else {
+    show($('nameSetup'));
+    $('nameBtn').addEventListener('click', saveName);
+    $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });
+  }
+}
+function saveName(){
+  const val = $('nameInput').value.trim();
+  if (!val) return;
+  localStorage.setItem('myAlias', val);
+  hide($('nameSetup'));
+  startApp(val);
+}
+if (localStorage.getItem('gate_ok') === '1') afterGate();
+
+/* ---------- Приложение ---------- */
+let myAlias = '';
+let unsub = null;
+
+function startApp(alias){
+  myAlias = alias;
+  $('whoLine').textContent = 'ты подписываешься как «' + alias + '»';
+  show($('app'));
+  listenLetters();
+
+  $('composeBtn').addEventListener('click', () => { $('composeText').value=''; show($('composeView')); $('composeText').focus(); });
+  $('composeClose').addEventListener('click', () => hide($('composeView')));
+  $('sendBtn').addEventListener('click', sendLetter);
+
+  $('readClose').addEventListener('click', () => hide($('readView')));
+
+  $('menuBtn').addEventListener('click', () => {
+    const val = prompt('Изменить подпись:', myAlias);
+    if (val && val.trim()) {
+      myAlias = val.trim();
+      localStorage.setItem('myAlias', myAlias);
+      $('whoLine').textContent = 'ты подписываешься как «' + myAlias + '»';
+      renderList(lastDocs);
+    }
+  });
+}
+
+async function sendLetter(){
+  const text = $('composeText').value.trim();
+  if (!text) return;
+  $('sendBtn').disabled = true;
+  try {
+    await addDoc(lettersCol, {
+      author: myAlias,
+      text: text,
+      createdAt: serverTimestamp(),
+      readBy: []
+    });
+    hide($('composeView'));
+  } catch(e){
+    alert('Не получилось отправить письмо. Проверь настройки Firebase.\n' + e.message);
+  } finally {
+    $('sendBtn').disabled = false;
+  }
+}
+
+let lastDocs = [];
+function listenLetters(){
+  const q = query(lettersCol, orderBy('createdAt', 'asc'));
+  unsub = onSnapshot(q, (snap) => {
+    lastDocs = [];
+    snap.forEach(d => lastDocs.push({ id: d.id, ...d.data() }));
+    renderList(lastDocs);
+  }, (err) => {
+    console.error(err);
+    $('list').innerHTML = '<div class="empty-hint">Не получилось загрузить письма.<br>Проверь настройки Firebase и интернет.</div>';
+  });
+}
+
+function renderList(items){
+  const list = $('list');
+  if (!items.length){
+    list.innerHTML = '<div class="empty-hint">Пока писем нет.<br>Напиши первое — стань тем, кто начал.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  // новые письма сверху
+  [...items].reverse().forEach(item => {
+    const mine = item.author === myAlias;
+    const readByMe = (item.readBy || []).includes(myAlias);
+    const unread = !mine && !readByMe;
+
+    const div = document.createElement('div');
+    div.className = 'envelope' + (mine ? ' mine' : '') + (unread ? ' unread' : '');
+    div.innerHTML = `
+      <div class="wax"></div>
+      <div class="meta">
+        <div class="from">${mine ? 'Ты' : escapeHtml(item.author)}</div>
+        <div class="preview">${unread ? 'Новое письмо ждёт тебя…' : escapeHtml((item.text||'').slice(0,40))}</div>
+      </div>
+      <div class="time">${formatTime(item.createdAt)}</div>
+    `;
+    div.addEventListener('click', () => openLetter(item, mine));
+    list.appendChild(div);
+  });
+}
+
+function openLetter(item, mine){
+  $('readFrom').textContent = mine ? 'Ты' : item.author;
+  $('readTime').textContent = formatTime(item.createdAt);
+  $('readBody').textContent = item.text;
+  const readByOther = (item.readBy||[]).filter(a => a !== item.author);
+  $('readMark').textContent = mine
+    ? (readByOther.length ? 'прочитано ♥' : 'ещё не прочитано')
+    : '';
+  show($('readView'));
+
+  if (!mine && !(item.readBy||[]).includes(myAlias)) {
+    updateDoc(doc(db, 'letters', item.id), { readBy: arrayUnion(myAlias) }).catch(console.error);
+  }
+}
+
+function formatTime(ts){
+  if (!ts || !ts.toDate) return '';
+  const d = ts.toDate();
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const opts = sameDay ? {hour:'2-digit', minute:'2-digit'} : {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'};
+  return d.toLocaleString('ru-RU', opts);
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
