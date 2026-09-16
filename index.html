@@ -20,16 +20,17 @@
     --bg2:#2c221d;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
+  html{height:100%; scrollbar-gutter: stable;}
+  body{height:100%;}
   body{
-    margin:0; min-height:100vh;
+    margin:0; min-height:100vh; min-height:100dvh;
     background: radial-gradient(1200px 800px at 50% -10%, var(--bg2), var(--bg));
     color:var(--ink);
     font-family:'Manrope', sans-serif;
     display:flex; align-items:center; justify-content:center;
     padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
   }
-  .screen{ width:100%; max-width:480px; min-height:100vh; padding:24px 20px 32px; display:flex; flex-direction:column; }
+  .screen{ width:100%; max-width:480px; height:100vh; height:100dvh; padding:24px 20px 32px; display:flex; flex-direction:column; overflow:hidden; }
   [hidden]{ display:none !important; }
 
   /* ---- Gate & name setup ---- */
@@ -65,7 +66,7 @@
   .app-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
   .app-header h1{ font-size:24px; margin:0; }
   .who{ font-size:12px; color:#c9bba9; }
-  .list{ flex:1; display:flex; flex-direction:column; gap:12px; overflow-y:auto; padding-bottom:90px; }
+  .list{ flex:1; min-height:0; display:flex; flex-direction:column; gap:12px; overflow-y:auto; padding-bottom:90px; }
   .envelope{
     background: var(--paper); border-radius:14px; padding:16px 16px;
     display:flex; align-items:center; gap:12px; cursor:pointer;
@@ -307,6 +308,7 @@ function listenLetters(){
 
 function renderList(items){
   const list = $('list');
+  const prevScroll = list.scrollTop;
   if (!items.length){
     list.innerHTML = '<div class="empty-hint">Пока писем нет.<br>Напиши первое — стань тем, кто начал.</div>';
     return;
@@ -331,6 +333,7 @@ function renderList(items){
     div.addEventListener('click', () => openLetter(item, mine));
     list.appendChild(div);
   });
+  list.scrollTop = prevScroll;
 }
 
 function openLetter(item, mine){
