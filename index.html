@@ -206,6 +206,10 @@ const $ = (id) => document.getElementById(id);
 const show = (el) => el.removeAttribute('hidden');
 const hide = (el) => el.setAttribute('hidden', '');
 
+let myAlias = '';
+let unsub = null;
+let lastDocs = [];
+
 /* ---------- Пароль ---------- */
 const gate = $('gate');
 if (localStorage.getItem('gate_ok') === '1') {
@@ -246,8 +250,6 @@ function saveName(){
 if (localStorage.getItem('gate_ok') === '1') afterGate();
 
 /* ---------- Приложение ---------- */
-let myAlias = '';
-let unsub = null;
 
 function startApp(alias){
   myAlias = alias;
@@ -291,7 +293,6 @@ async function sendLetter(){
   }
 }
 
-let lastDocs = [];
 function listenLetters(){
   const q = query(lettersCol, orderBy('createdAt', 'asc'));
   unsub = onSnapshot(q, (snap) => {
